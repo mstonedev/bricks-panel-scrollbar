@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Bricks Builder Scrollbar
+ * Plugin Name: Bricks Builder Custom Scrollbar
  * Plugin URI:  https://yourdomain.com
- * Description: Creates a scrollbar in the Bricks panel and allows full visual customization of the Bricks Builder side panel scrollbar directly from Settings > General.
- * Version:     1.1.0
- * Author:      Michael Stonee
+ * Description: Restores and customizes the Bricks Builder side panels scrollbars, ensuring they always render cleanly on the right side of each sidebar.
+ * Version:     1.2.0
+ * Author:      Your Name
  * License:     GPL2
  */
 
@@ -17,11 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * 1. Register Settings in Settings > General
  */
 add_action( 'admin_init', function() {
-    // Add a new section to Settings > General
     add_settings_section(
         'bricks_scrollbar_settings_section',
         'Bricks Panel Scrollbar Settings',
-        function() { echo '<p>Customize the look of your Bricks Builder left side panel scrollbar.</p>'; },
+        function() { echo '<p>Customize the look of your Bricks Builder settings panel and structure panel scrollbars.</p>'; },
         'general'
     );
 
@@ -66,21 +65,24 @@ add_action( 'admin_init', function() {
 });
 
 /**
- * 2. Inject Dynamic CSS into the Bricks Builder frame
+ * 2. Inject Dynamic CSS into the Bricks Builder frame targeting BOTH panels
  */
 add_action('wp_print_scripts', function() {
     if ( function_exists('bricks_is_builder') && bricks_is_builder() ) {
-        // Fetch values chosen in the dashboard settings
         $thumb_color = get_option( 'bricks_scrollbar_thumb_color', '#555555' );
         $track_color = get_option( 'bricks_scrollbar_track_color', '#2c2c2c' );
         $width       = get_option( 'bricks_scrollbar_width', '6' ) . 'px';
         
-        // Generate a slightly brighter hover color for the thumb dynamically
         $hover_color = ( strtolower( $thumb_color ) === '#555555' ) ? '#777777' : $thumb_color . 'cc';
         ?>
         <style>
-            /* Reset standard layout behavior flags on the target container */
-            div#bricks-panel-inner {
+            /* 
+               Target both panels and force left-to-right direction layout, 
+               which guarantees scroll tracks pin to the right edge of each sidebar container.
+            */
+            div#bricks-panel-inner,
+            div#bricks-structure .panel-content {
+                direction: ltr !important; 
                 height: 100% !important;
                 overflow-x: hidden !important;
                 overflow-y: scroll !important;
@@ -89,26 +91,36 @@ add_action('wp_print_scripts', function() {
                 scrollbar-color: <?php echo esc_html($thumb_color); ?> <?php echo esc_html($track_color); ?> !important;
             }
 
-            /* Forces Chromium engines to re-render the custom layout tracks */
-            div#bricks-panel-inner::-webkit-scrollbar {
+            /* Ensure text content alignment inside the wrappers stays natural */
+            div#bricks-panel-inner *,
+            div#bricks-structure .panel-content * {
+                direction: initial;
+            }
+
+            /* Webkit layout overrides for both panels */
+            div#bricks-panel-inner::-webkit-scrollbar,
+            div#bricks-structure .panel-content::-webkit-scrollbar {
                 display: block !important;
                 width: <?php echo esc_html($width); ?> !important;
                 height: <?php echo esc_html($width); ?> !important;
             }
 
-            /* Visual Track Layout */
-            div#bricks-panel-inner::-webkit-scrollbar-track {
+            /* Visual Track layout for both panels */
+            div#bricks-panel-inner::-webkit-scrollbar-track,
+            div#bricks-structure .panel-content::-webkit-scrollbar-track {
                 background: <?php echo esc_html($track_color); ?> !important;
             }
              
-            /* Draggable Handle Layout */
-            div#bricks-panel-inner::-webkit-scrollbar-thumb {
+            /* Draggable Handle Layout for both panels */
+            div#bricks-panel-inner::-webkit-scrollbar-thumb,
+            div#bricks-structure .panel-content::-webkit-scrollbar-thumb {
                 background: <?php echo esc_html($thumb_color); ?> !important; 
                 border-radius: 10px !important;
             }
 
-            /* Interactive Highlight Hover Flag */
-            div#bricks-panel-inner::-webkit-scrollbar-thumb:hover {
+            /* Interactive Highlight Hover Flag for both panels */
+            div#bricks-panel-inner::-webkit-scrollbar-thumb:hover,
+            div#bricks-structure .panel-content::-webkit-scrollbar-thumb:hover {
                 background: <?php echo esc_html($hover_color); ?> !important; 
             }
         </style>
